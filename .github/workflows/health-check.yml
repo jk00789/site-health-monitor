@@ -1,0 +1,47 @@
+name: Health Check Monitor
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: '*/5 * * * *'
+  # Allows manual triggering from Actions tab
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check health endpoint
+        id: health
+        run: |
+          echo "Checking health endpoint..."
+          
+          # Make request and capture response
+          response=$(curl -s -w "\n%{http_code}" https://gujarati.life/health)
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "HTTP Status: $http_code"
+          echo "Response Body: $body"
+          
+          # Check if status code is 200
+          if [ "$http_code" -ne 200 ]; then
+            echo "❌ Health check failed - HTTP $http_code"
+            exit 1
+          fi
+          
+          # Check if response contains "healthy"
+          if echo "$body" | grep -q '"status": "healthy"'; then
+            echo "✅ Health check passed"
+          else
+            echo "❌ Health check failed - status not healthy"
+            exit 1
+          fi
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "🚨 ALERT: Health check failed!"
+          echo "Time: $(date)"
+          # This will show in the GitHub Actions log
