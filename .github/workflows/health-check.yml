@@ -31,8 +31,8 @@ jobs:
             exit 1
           fi
           
-          # Check if response contains "healthy"
-          if echo "$body" | grep -q '"status": "healthy"'; then
+          # Check if response contains "healthy" (with or without spaces)
+          if echo "$body" | grep -q '"status"[[:space:]]*:[[:space:]]*"healthy"'; then
             echo "✅ Health check passed"
           else
             echo "❌ Health check failed - status not healthy"
@@ -44,4 +44,3 @@ jobs:
         run: |
           echo "🚨 ALERT: Health check failed!"
           echo "Time: $(date)"
-          # This will show in the GitHub Actions log
